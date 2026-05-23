@@ -1,8 +1,8 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
-import { users as mockUsers } from '../config/mockData';
+import { jwtDecode } from 'jwt-decode';
+import { useBusiness } from './BusinessContext';
 
 const AuthContext = createContext();
-
 const AUTH_KEY = 'saciaturno_auth';
 
 function loadAuth() {
@@ -25,8 +25,6 @@ function authReducer(state, action) {
       return { user: action.payload, isAuthenticated: true };
     case 'LOGOUT':
       return { user: null, isAuthenticated: false };
-    case 'REGISTER':
-      return { user: action.payload, isAuthenticated: true };
     case 'UPDATE_USER':
       return { ...state, user: { ...state.user, ...action.payload } };
     default:
@@ -35,41 +33,70 @@ function authReducer(state, action) {
 }
 
 export function AuthProvider({ children }) {
+  // AuthProvider es hijo de BusinessProvider → puede usar useBusiness()
+  const { state: bizState } = useBusiness();
   const [state, dispatch] = useReducer(authReducer, loadAuth());
 
   useEffect(() => {
     saveAuth(state);
   }, [state]);
 
-  const login = (email, password) => {
-    const user = mockUsers.find(
-      (u) => u.email === email && u.passwordHash === password
+  // Cuando cambia la lista de admins autorizados, revalidar el usuario actual
+  // (ej: el dueño le quitó permisos a alguien que ya estaba logueado)
+  useEffect(() => {
+    if (!state.user) return;
+    const authorizedAdmins = bizState.authorizedAdmins || [];
+    const match = authorizedAdmins.find(
+      (a) => a.email.toLowerCase() === state.user.email.toLowerCase()
     );
-    if (user) {
+    const currentRole = match?.role || 'client';
+    const currentProfessionalId = match?.professionalId || null;
+
+    // Solo actualizar si el rol o professionalId cambió
+    if (
+      state.user.role !== currentRole ||
+      state.user.professionalId !== currentProfessionalId
+    ) {
+      dispatch({
+        type: 'UPDATE_USER',
+        payload: { role: currentRole, professionalId: currentProfessionalId },
+      });
+    }
+  }, [bizState.authorizedAdmins, state.user]);
+
+  /**
+   * Login exclusivo con Google.
+   * - Si el Gmail está en authorizedAdmins  → role = 'owner' | 'admin'
+   * - Si no está                            → role = 'client'
+   */
+  const loginWithGoogle = (credential) => {
+    try {
+      const decoded = jwtDecode(credential);
+      const { email, name, picture, sub: googleId } = decoded;
+
+      const authorizedAdmins = bizState.authorizedAdmins || [];
+      const match = authorizedAdmins.find(
+        (a) => a.email.toLowerCase() === email.toLowerCase()
+      );
+
+      const user = {
+        id: googleId,
+        email,
+        name,
+        avatarUrl: picture,
+        googleId,
+        role: match?.role || 'client',
+        professionalId: match?.professionalId || null,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      };
+
       dispatch({ type: 'LOGIN', payload: user });
       return { success: true, user };
+    } catch (error) {
+      console.error('Google Login Error:', error);
+      return { success: false, error: 'Error al iniciar sesión con Google' };
     }
-    return { success: false, error: 'Email o contraseña incorrectos' };
-  };
-
-  const register = (userData) => {
-    const exists = mockUsers.find((u) => u.email === userData.email);
-    if (exists) {
-      return { success: false, error: 'El email ya está registrado' };
-    }
-    const newUser = {
-      id: 'usr-' + Date.now(),
-      ...userData,
-      passwordHash: userData.password,
-      role: 'client',
-      businessId: null,
-      avatarUrl: null,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-    mockUsers.push(newUser);
-    dispatch({ type: 'REGISTER', payload: newUser });
-    return { success: true, user: newUser };
   };
 
   const logout = () => {
@@ -77,7 +104,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout, dispatch }}>
+    <AuthContext.Provider value={{ ...state, loginWithGoogle, logout, dispatch }}>
       {children}
     </AuthContext.Provider>
   );

@@ -82,11 +82,12 @@ export function calculateAvailableSlots({
     return true;
   });
 
-  // 6. Si es hoy, filtrar slots pasados
+  // 6. Si es hoy, filtrar slots con menos de 10 minutos de antelación
   if (isToday(date)) {
     const now = new Date();
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    return availableSlots.filter((slot) => slot.startMinutes > nowMinutes);
+    // Se necesitan al menos 10 minutos de antelación para reservar
+    return availableSlots.filter((slot) => slot.startMinutes >= nowMinutes + 10);
   }
 
   return availableSlots;

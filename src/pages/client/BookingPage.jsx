@@ -4,11 +4,11 @@ import { useBooking } from '../../contexts/BookingContext';
 import { useBusiness } from '../../contexts/BusinessContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { calculateAvailableSlots, professionalWorksOnDate } from '../../utils/availabilityEngine';
-import { formatDate, formatPrice, toDateString, getLocalDayOfWeek, getMonthName, getDayShort, addMinutes, generateId } from '../../utils/dateUtils';
+import { formatDate, formatPrice, toDateString, getMonthName, generateId } from '../../utils/dateUtils';
 
 // ---- STEPPER ----
 function Stepper({ step }) {
-  const labels = ['Profesional', 'Servicio', 'Fecha', 'Horario', 'Datos', 'Cuenta', 'Confirmar'];
+  const labels = ['Profesional', 'Servicio', 'Fecha', 'Horario', 'Datos', 'Confirmar'];
   return (
     <div className="stepper">
       {labels.map((label, idx) => {
@@ -215,97 +215,44 @@ function TimeSlotGrid({ slots, selectedSlot, onSelect, date }) {
   );
 }
 
-// ---- PERSONAL INFO ----
-function PersonalInfoStep({ info, onChange }) {
+// ---- PERSONAL INFO (solo teléfono — nombre y email vienen de Google) ----
+function PersonalInfoStep({ user, phone, onPhoneChange }) {
   return (
     <div>
-      <h2 className="booking-step-title">Tus datos</h2>
-      <p className="booking-step-subtitle">Necesitamos tus datos para confirmar la reserva</p>
+      <h2 className="booking-step-title">Tu número de teléfono</h2>
+      <p className="booking-step-subtitle">Solo necesitamos tu móvil para confirmar la reserva</p>
+
+      <div className="card" style={{ marginBottom: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-md)', padding: 'var(--space-md)' }}>
+        {user.avatarUrl
+          ? <img src={user.avatarUrl} alt={user.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
+          : <div className="avatar avatar-md">{user.name.split(' ').map(n => n[0]).join('')}</div>
+        }
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600 }}>{user.name}</div>
+          <div className="text-sm text-secondary">{user.email}</div>
+        </div>
+        <span className="badge badge-success">✓ Google</span>
+      </div>
+
       <div className="personal-form">
         <div className="form-group">
-          <label className="form-label">Nombre completo <span className="required">*</span></label>
-          <input className="form-input" type="text" value={info.name} onChange={e => onChange({ name: e.target.value })} placeholder="Juan Pérez" />
+          <label className="form-label">Teléfono móvil <span className="required">*</span></label>
+          <input
+            className="form-input"
+            type="tel"
+            value={phone}
+            onChange={e => onPhoneChange(e.target.value)}
+            placeholder="+54 11 1234-5678"
+            autoFocus
+          />
         </div>
-        <div className="form-group">
-          <label className="form-label">Teléfono <span className="required">*</span></label>
-          <input className="form-input" type="tel" value={info.phone} onChange={e => onChange({ phone: e.target.value })} placeholder="+54 11 1234-5678" />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Email <span className="required">*</span></label>
-          <input className="form-input" type="email" value={info.email} onChange={e => onChange({ email: e.target.value })} placeholder="tu@email.com" />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Notas (opcional)</label>
-          <textarea className="form-input" value={info.notes} onChange={e => onChange({ notes: e.target.value })} placeholder="Algún comentario para el profesional..." />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---- AUTH STEP ----
-function AuthStep({ info, onLogin, onRegister }) {
-  const [mode, setMode] = useState('register');
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPass, setLoginPass] = useState('');
-  const [error, setError] = useState('');
-
-  const handleRegister = () => {
-    if (!password || password.length < 4) return setError('La contraseña debe tener al menos 4 caracteres');
-    if (password !== password2) return setError('Las contraseñas no coinciden');
-    setError('');
-    onRegister(password);
-  };
-
-  const handleLogin = () => {
-    setError('');
-    onLogin(loginEmail, loginPass);
-  };
-
-  return (
-    <div>
-      <h2 className="booking-step-title">Crear cuenta o iniciar sesión</h2>
-      <p className="booking-step-subtitle">Necesitás una cuenta para reservar</p>
-      <div className="auth-container" style={{ padding: 0 }}>
-        <div className="tabs" style={{ marginBottom: 'var(--space-lg)' }}>
-          <button className={`tab ${mode === 'register' ? 'active' : ''}`} onClick={() => setMode('register')}>Crear Cuenta</button>
-          <button className={`tab ${mode === 'login' ? 'active' : ''}`} onClick={() => setMode('login')}>Iniciar Sesión</button>
-        </div>
-        {error && <div className="badge badge-danger mb-md" style={{ display: 'block', textAlign: 'center', padding: '8px 16px', borderRadius: '8px' }}>{error}</div>}
-        {mode === 'register' ? (
-          <div className="auth-form">
-            <div className="form-group">
-              <label className="form-label">Contraseña <span className="required">*</span></label>
-              <input className="form-input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 4 caracteres" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Repetir contraseña <span className="required">*</span></label>
-              <input className="form-input" type="password" value={password2} onChange={e => setPassword2(e.target.value)} placeholder="Repetí tu contraseña" />
-            </div>
-            <button className="btn btn-primary btn-full btn-lg" onClick={handleRegister}>Crear Cuenta y Continuar</button>
-          </div>
-        ) : (
-          <div className="auth-form">
-            <div className="form-group">
-              <label className="form-label">Email</label>
-              <input className="form-input" type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="tu@email.com" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Contraseña</label>
-              <input className="form-input" type="password" value={loginPass} onChange={e => setLoginPass(e.target.value)} placeholder="Tu contraseña" />
-            </div>
-            <button className="btn btn-primary btn-full btn-lg" onClick={handleLogin}>Iniciar Sesión y Continuar</button>
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
 // ---- SUMMARY ----
-function BookingSummary({ professional, service, date, timeSlot, price, currency }) {
+function BookingSummary({ professional, service, date, timeSlot, price, currency, clientName, clientPhone }) {
   return (
     <div>
       <h2 className="booking-step-title">Confirmar tu reserva</h2>
@@ -340,6 +287,14 @@ function BookingSummary({ professional, service, date, timeSlot, price, currency
               <span className="summary-label">💰 Total</span>
               <span className="summary-value">{formatPrice(price, currency)}</span>
             </div>
+            <div className="summary-row" style={{ borderTop: '1px solid var(--border-color)', marginTop: 'var(--space-sm)', paddingTop: 'var(--space-sm)' }}>
+              <span className="summary-label">👤 Cliente</span>
+              <span className="summary-value">{clientName}</span>
+            </div>
+            <div className="summary-row">
+              <span className="summary-label">📱 Teléfono</span>
+              <span className="summary-value">{clientPhone}</span>
+            </div>
           </div>
           <div className="summary-footer">
             <div className="future-feature">
@@ -359,12 +314,22 @@ function BookingSummary({ professional, service, date, timeSlot, price, currency
 export default function BookingPage() {
   const { booking, dispatch } = useBooking();
   const { state, dispatch: bizDispatch } = useBusiness();
-  const { isAuthenticated, user, login, register } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
 
   const { professionals, services, professionalServices, schedules, appointments, business } = state;
   const { step, professionalId, serviceId, date, timeSlot, personalInfo } = booking;
+
+  // Check if user already has an appointment on this day
+  const hasAppointmentToday = useMemo(() => {
+    if (!user || !date) return false;
+    return appointments.some(app => 
+      app.userId === user.id && 
+      app.appointmentDate === date &&
+      app.status !== 'cancelado'
+    );
+  }, [user, date, appointments]);
 
   const selectedProfessional = professionals.find(p => p.id === professionalId);
   const selectedService = services.find(s => s.id === serviceId);
@@ -393,53 +358,25 @@ export default function BookingPage() {
     switch (step) {
       case 1: return !!professionalId;
       case 2: return !!serviceId;
-      case 3: return !!date;
+      case 3: return !!date && !hasAppointmentToday;
       case 4: return !!timeSlot;
-      case 5: return personalInfo.name && personalInfo.phone && personalInfo.email;
-      case 6: return isAuthenticated;
-      case 7: return true;
+      case 5: return !!personalInfo.phone;
       default: return false;
     }
   };
 
   const handleNext = () => {
-    if (step === 5 && isAuthenticated) {
-      // Skip auth step if already logged in
-      dispatch({ type: 'SET_STEP', payload: 7 });
+    if (step === 3 && hasAppointmentToday) {
+      setError('Ya tenés un turno reservado para este día.');
       return;
     }
+    setError('');
     dispatch({ type: 'NEXT_STEP' });
   };
 
   const handleBack = () => {
-    if (step === 7 && isAuthenticated) {
-      dispatch({ type: 'SET_STEP', payload: 5 });
-      return;
-    }
+    setError('');
     dispatch({ type: 'PREV_STEP' });
-  };
-
-  const handleLogin = (email, password) => {
-    const result = login(email, password);
-    if (result.success) {
-      dispatch({ type: 'NEXT_STEP' });
-    } else {
-      setError(result.error);
-    }
-  };
-
-  const handleRegister = (password) => {
-    const result = register({
-      name: personalInfo.name,
-      email: personalInfo.email,
-      phone: personalInfo.phone,
-      password,
-    });
-    if (result.success) {
-      dispatch({ type: 'NEXT_STEP' });
-    } else {
-      setError(result.error);
-    }
   };
 
   const handleConfirm = () => {
@@ -447,6 +384,9 @@ export default function BookingPage() {
       id: generateId(),
       businessId: business.id,
       userId: user.id,
+      clientName: user.name,
+      clientEmail: user.email,
+      clientPhone: personalInfo.phone,
       professionalId,
       serviceId,
       appointmentDate: date,
@@ -454,7 +394,7 @@ export default function BookingPage() {
       endTime: timeSlot.endTime,
       price: finalPrice,
       status: 'pendiente',
-      notes: personalInfo.notes || '',
+      notes: '',
       adminNotes: '',
       createdAt: new Date().toISOString(),
     };
@@ -466,6 +406,12 @@ export default function BookingPage() {
   return (
     <div className="booking-container">
       <Stepper step={step} />
+
+      {error && (
+        <div className="badge badge-danger mb-md" style={{ display: 'block', textAlign: 'center', padding: '12px', borderRadius: '8px', fontSize: '14px' }}>
+          {error}
+        </div>
+      )}
 
       {step === 1 && (
         <ProfessionalSelect
@@ -506,20 +452,13 @@ export default function BookingPage() {
 
       {step === 5 && (
         <PersonalInfoStep
-          info={personalInfo}
-          onChange={data => dispatch({ type: 'SET_PERSONAL_INFO', payload: data })}
+          user={user}
+          phone={personalInfo.phone}
+          onPhoneChange={phone => dispatch({ type: 'SET_PERSONAL_INFO', payload: { phone } })}
         />
       )}
 
-      {step === 6 && (
-        <AuthStep
-          info={personalInfo}
-          onLogin={handleLogin}
-          onRegister={handleRegister}
-        />
-      )}
-
-      {step === 7 && selectedProfessional && selectedService && (
+      {step === 6 && selectedProfessional && selectedService && (
         <BookingSummary
           professional={selectedProfessional}
           service={{ ...selectedService, finalDuration }}
@@ -527,6 +466,8 @@ export default function BookingPage() {
           timeSlot={timeSlot}
           price={finalPrice}
           currency={business.currency}
+          clientName={user.name}
+          clientPhone={personalInfo.phone}
         />
       )}
 
@@ -535,11 +476,11 @@ export default function BookingPage() {
           <button className="btn btn-outline" onClick={handleBack}>← Atrás</button>
         ) : <div />}
 
-        {step < 7 && step !== 6 ? (
+        {step < 6 ? (
           <button className="btn btn-primary" disabled={!canGoNext()} onClick={handleNext}>
             Siguiente →
           </button>
-        ) : step === 7 ? (
+        ) : step === 6 ? (
           <button className="btn btn-primary btn-lg" onClick={handleConfirm}>
             ✅ Confirmar Reserva
           </button>

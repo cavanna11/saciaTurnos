@@ -330,24 +330,11 @@ export const appointments = [
 
 export const users = [
   {
-    id: 'usr-001',
-    name: 'Admin SACIA',
-    email: 'admin@sacia.tech',
-    phone: '+54 11 0000-0000',
-    passwordHash: 'admin123',
-    role: 'owner',
-    businessId: 'biz-001',
-    avatarUrl: null,
-    isActive: true,
-  },
-  {
     id: 'usr-002',
     name: 'Laura Martínez',
     email: 'laura@email.com',
     phone: '+54 11 2222-1111',
-    passwordHash: 'pass123',
     role: 'client',
-    businessId: null,
     avatarUrl: null,
     isActive: true,
   },
@@ -356,9 +343,7 @@ export const users = [
     name: 'Pedro Sánchez',
     email: 'pedro@email.com',
     phone: '+54 11 3333-2222',
-    passwordHash: 'pass123',
     role: 'client',
-    businessId: null,
     avatarUrl: null,
     isActive: true,
   },
@@ -367,10 +352,47 @@ export const users = [
     name: 'Ana Ruiz',
     email: 'ana@email.com',
     phone: '+54 11 4444-3333',
-    passwordHash: 'pass123',
     role: 'client',
-    businessId: null,
     avatarUrl: null,
     isActive: true,
+  },
+];
+
+// ─── Admins autorizados por Google ───────────────────────────────────────────
+// El dueño gestiona esta lista desde el panel → /admin/admins
+// role: 'owner'  → acceso total
+// role: 'admin'  → solo sus propias citas (debe tener professionalId)
+export const authorizedAdmins = [
+  {
+    id: 'auth-001',
+    email: 'pocopanjugueteria@gmail.com',      // ← reemplazar con el Gmail real del dueño
+    role: 'owner',
+    professionalId: null,
+    name: 'Dueño SACIA',
+    addedAt: '2025-01-01T00:00:00',
+  },
+  {
+    id: 'auth-002',
+    email: 'jano.cobasale@gmail.com', // ← Gmail real de Carlos
+    role: 'admin',
+    professionalId: 'prof-001',
+    name: 'Carlos Gómez',
+    addedAt: '2025-01-01T00:00:00',
+  },
+  {
+    id: 'auth-003',
+    email: 'maria.estilista@gmail.com', // ← Gmail real de María
+    role: 'admin',
+    professionalId: 'prof-002',
+    name: 'María López',
+    addedAt: '2025-01-01T00:00:00',
+  },
+  {
+    id: 'auth-004',
+    email: 'juan.barbero@gmail.com', // ← Gmail real de Juan
+    role: 'admin',
+    professionalId: 'prof-003',
+    name: 'Juan Pérez',
+    addedAt: '2025-01-01T00:00:00',
   },
 ];

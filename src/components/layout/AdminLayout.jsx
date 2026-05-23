@@ -2,27 +2,42 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const navItems = [
-  { to: '/admin', icon: '📊', label: 'Dashboard', end: true },
+// Items visibles solo para el dueño (owner)
+const ownerNavItems = [
+  { to: '/admin',               icon: '📊', label: 'Dashboard',        end: true },
   { to: '/admin/profesionales', icon: '👥', label: 'Profesionales' },
-  { to: '/admin/servicios', icon: '✂️', label: 'Servicios' },
-  { to: '/admin/citas', icon: '📅', label: 'Citas' },
+  { to: '/admin/servicios',     icon: '✂️', label: 'Servicios' },
+  { to: '/admin/citas',         icon: '📅', label: 'Citas' },
+  { to: '/admin/admins',        icon: '🛡️', label: 'Administradores' },
   { to: '/admin/configuracion', icon: '⚙️', label: 'Configuración' },
 ];
+
+// Items para el admin/peluquero → solo sus citas
+const adminNavItems = [
+  { to: '/admin', icon: '📅', label: 'Mis Citas', end: true },
+];
+
+const ROLE_LABELS = {
+  owner: { text: 'Dueño',  color: 'var(--primary)' },
+  admin: { text: 'Peluquero', color: 'var(--success)' },
+};
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const isOwner = user?.role === 'owner';
+  const navItems = isOwner ? ownerNavItems : adminNavItems;
+  const roleInfo = ROLE_LABELS[user?.role] || ROLE_LABELS.admin;
+
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/login');
   };
 
   return (
     <div className="admin-layout">
-      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
@@ -34,15 +49,23 @@ export default function AdminLayout() {
           <span>SACIA Admin</span>
         </div>
 
+        {/* Badge de rol */}
+        <div style={{ padding: '0 var(--space-md) var(--space-md)', textAlign: 'center' }}>
+          <span
+            className="badge"
+            style={{ background: roleInfo.color + '22', color: roleInfo.color, fontSize: '11px', fontWeight: 700 }}
+          >
+            {roleInfo.text}
+          </span>
+        </div>
+
         <nav className="admin-nav">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
-              className={({ isActive }) =>
-                `admin-nav-item ${isActive ? 'active' : ''}`
-              }
+              className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
               onClick={() => setSidebarOpen(false)}
             >
               <span className="nav-icon">{item.icon}</span>
@@ -63,18 +86,16 @@ export default function AdminLayout() {
       <main className="admin-main">
         <div className="admin-topbar">
           <div className="admin-topbar-left">
-            <button
-              className="hamburger"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
+            <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
               ☰
             </button>
           </div>
           <div className="admin-topbar-right">
             <div className="flex items-center gap-sm">
-              <div className="avatar avatar-sm">
-                {user?.name?.charAt(0) || 'A'}
-              </div>
+              {user?.avatarUrl
+                ? <img src={user.avatarUrl} alt={user.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                : <div className="avatar avatar-sm">{user?.name?.charAt(0) || 'A'}</div>
+              }
               <span className="text-sm">{user?.name || 'Admin'}</span>
             </div>
           </div>

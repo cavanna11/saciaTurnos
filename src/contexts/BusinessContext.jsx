@@ -6,6 +6,7 @@ import {
   schedules as mockSchedules,
   appointments as mockAppointments,
   businessSettings as mockBusiness,
+  authorizedAdmins as mockAuthorizedAdmins,
 } from '../config/mockData';
 
 const BusinessContext = createContext();
@@ -26,17 +27,46 @@ function saveData(state) {
   } catch (e) {}
 }
 
-const initialState = loadData() || {
-  business: mockBusiness,
-  professionals: mockProfessionals,
-  services: mockServices,
-  professionalServices: mockPS,
-  schedules: mockSchedules,
-  appointments: mockAppointments,
-};
+// Mergea los admins de mockData con los del localStorage:
+// - Los admins agregados desde la UI (en localStorage) se conservan
+// - Cualquier email nuevo/actualizado en mockData.js se incorpora automáticamente
+// - Si el email ya existe en localStorage, mockData NO lo sobreescribe (la UI tiene prioridad)
+function mergeAuthorizedAdmins(fromStorage = [], fromMock = []) {
+  const merged = [...fromStorage];
+  for (const mockAdmin of fromMock) {
+    const alreadyExists = merged.some(
+      (a) => a.email.toLowerCase() === mockAdmin.email.toLowerCase()
+    );
+    if (!alreadyExists) merged.push(mockAdmin);
+  }
+  return merged;
+}
+
+const _saved = loadData();
+
+const initialState = _saved
+  ? {
+      ..._saved,
+      // Siempre incorporar emails nuevos de mockData aunque el localStorage ya tenga datos
+      authorizedAdmins: mergeAuthorizedAdmins(
+        _saved.authorizedAdmins || [],
+        mockAuthorizedAdmins
+      ),
+    }
+  : {
+      business: mockBusiness,
+      professionals: mockProfessionals,
+      services: mockServices,
+      professionalServices: mockPS,
+      schedules: mockSchedules,
+      appointments: mockAppointments,
+      authorizedAdmins: mockAuthorizedAdmins,
+    };
 
 function businessReducer(state, action) {
   switch (action.type) {
+
+    // ── Citas ──────────────────────────────────────────────────────────────
     case 'ADD_APPOINTMENT':
       return { ...state, appointments: [...state.appointments, action.payload] };
     case 'UPDATE_APPOINTMENT':
@@ -55,6 +85,8 @@ function businessReducer(state, action) {
             : a
         ),
       };
+
+    // ── Profesionales ──────────────────────────────────────────────────────
     case 'ADD_PROFESSIONAL':
       return { ...state, professionals: [...state.professionals, action.payload] };
     case 'UPDATE_PROFESSIONAL':
@@ -67,8 +99,13 @@ function businessReducer(state, action) {
     case 'DELETE_PROFESSIONAL':
       return {
         ...state,
-        professionals: state.professionals.filter((p) => p.id !== action.payload),
+        professionals:       state.professionals.filter((p) => p.id !== action.payload),
+        // Limpieza en cascada: eliminar horarios y servicios del profesional borrado
+        schedules:           state.schedules.filter((s) => s.professionalId !== action.payload),
+        professionalServices: state.professionalServices.filter((ps) => ps.professionalId !== action.payload),
       };
+
+    // ── Servicios ──────────────────────────────────────────────────────────
     case 'ADD_SERVICE':
       return { ...state, services: [...state.services, action.payload] };
     case 'UPDATE_SERVICE':
@@ -83,6 +120,8 @@ function businessReducer(state, action) {
         ...state,
         services: state.services.filter((s) => s.id !== action.payload),
       };
+
+    // ── Horarios / Professional-Services ───────────────────────────────────
     case 'SET_SCHEDULES':
       return {
         ...state,
@@ -101,8 +140,31 @@ function businessReducer(state, action) {
           ...action.payload.services,
         ],
       };
+
+    // ── Configuración del negocio ──────────────────────────────────────────
     case 'UPDATE_BUSINESS':
       return { ...state, business: { ...state.business, ...action.payload } };
+
+    // ── Admins autorizados ─────────────────────────────────────────────────
+    case 'ADD_AUTHORIZED_ADMIN':
+      return {
+        ...state,
+        authorizedAdmins: [...state.authorizedAdmins, action.payload],
+      };
+    case 'UPDATE_AUTHORIZED_ADMIN':
+      return {
+        ...state,
+        authorizedAdmins: state.authorizedAdmins.map((a) =>
+          a.id === action.payload.id ? { ...a, ...action.payload } : a
+        ),
+      };
+    case 'REMOVE_AUTHORIZED_ADMIN':
+      return {
+        ...state,
+        authorizedAdmins: state.authorizedAdmins.filter((a) => a.id !== action.payload),
+      };
+
+    // ── Reset ──────────────────────────────────────────────────────────────
     case 'RESET_DATA':
       return {
         business: mockBusiness,
@@ -111,7 +173,9 @@ function businessReducer(state, action) {
         professionalServices: mockPS,
         schedules: mockSchedules,
         appointments: mockAppointments,
+        authorizedAdmins: mockAuthorizedAdmins,
       };
+
     default:
       return state;
   }
