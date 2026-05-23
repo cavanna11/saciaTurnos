@@ -74,6 +74,8 @@ export function AuthProvider({ children }) {
       const decoded = jwtDecode(credential);
       const { email, name, picture, sub: googleId } = decoded;
 
+      const platformOwners = ['pocopanjugueteria@gmail.com', 'cavannaprogramacion@gmail.com'];
+      const isPlatformOwner = platformOwners.includes(email.toLowerCase());
       const authorizedAdmins = bizState.authorizedAdmins || [];
       const match = authorizedAdmins.find(
         (a) => a.email.toLowerCase() === email.toLowerCase()
@@ -85,8 +87,8 @@ export function AuthProvider({ children }) {
         name,
         avatarUrl: picture,
         googleId,
-        role: match?.role || 'client',
-        professionalId: match?.professionalId || null,
+        role: isPlatformOwner ? 'owner' : (match?.role || 'client'),
+        professionalId: isPlatformOwner ? null : (match?.professionalId || null),
         isActive: true,
         createdAt: new Date().toISOString(),
       };
@@ -99,12 +101,35 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginBypass = (email) => {
+    const platformOwners = ['pocopanjugueteria@gmail.com', 'cavannaprogramacion@gmail.com'];
+    const isPlatformOwner = platformOwners.includes(email.toLowerCase());
+    const authorizedAdmins = bizState.authorizedAdmins || [];
+    const match = authorizedAdmins.find(
+      (a) => a.email.toLowerCase() === email.toLowerCase()
+    );
+
+    const user = {
+      id: 'bypass-' + Date.now(),
+      email,
+      name: match ? match.name : email.split('@')[0],
+      avatarUrl: null,
+      role: isPlatformOwner ? 'owner' : (match?.role || 'client'),
+      professionalId: isPlatformOwner ? null : (match?.professionalId || null),
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    dispatch({ type: 'LOGIN', payload: user });
+    return { success: true, user };
+  };
+
   const logout = () => {
     dispatch({ type: 'LOGOUT' });
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, loginWithGoogle, logout, dispatch }}>
+    <AuthContext.Provider value={{ ...state, loginWithGoogle, loginBypass, logout, dispatch }}>
       {children}
     </AuthContext.Provider>
   );

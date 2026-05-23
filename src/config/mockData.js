@@ -25,7 +25,195 @@ export const businessSettings = {
     instagram: '@barberiasacia',
     whatsapp: '+5411123456789',
   },
+  monthlyFee: 12000,
+  debt: 0,
+  isFrozen: false,
+  createdAt: '2025-01-10T10:00:00Z',
+  lastPaymentDate: '2026-05-10',
+  nextBillingDate: '2026-06-10',
+  whatsappQuota: 100,
 };
+
+export const businesses = [
+  businessSettings,
+  {
+    id: 'biz-002',
+    name: 'Estética Bella',
+    slug: 'estetica-bella',
+    logoUrl: null,
+    primaryColor: '#ec4899',
+    secondaryColor: '#f472b6',
+    accentColor: '#fb7185',
+    phone: '+54 11 9876-5432',
+    email: 'contacto@esteticabella.com',
+    address: 'Av. Santa Fe 2345, CABA',
+    city: 'Buenos Aires',
+    country: 'Argentina',
+    currency: 'ARS',
+    timezone: 'America/Buenos_Aires',
+    slotInterval: 45,
+    minCancelHours: 3,
+    onlineBookingEnabled: true,
+    welcomeMessage: 'Reserva tu tratamiento estético',
+    socialLinks: {
+      instagram: '@esteticabella',
+      whatsapp: '+5411987654321',
+    },
+    monthlyFee: 12000,
+    debt: 12000,
+    isFrozen: false,
+    createdAt: '2025-02-15T11:00:00Z',
+    lastPaymentDate: '2026-04-15',
+    nextBillingDate: '2026-05-15',
+    whatsappQuota: 100,
+  },
+  {
+    id: 'biz-003',
+    name: 'Spa Express',
+    slug: 'spa-express',
+    logoUrl: null,
+    primaryColor: '#10b981',
+    secondaryColor: '#34d399',
+    accentColor: '#6ee7b7',
+    phone: '+54 11 5555-4444',
+    email: 'info@spaexpress.com',
+    address: 'Calle Florida 567, CABA',
+    city: 'Buenos Aires',
+    country: 'Argentina',
+    currency: 'ARS',
+    timezone: 'America/Buenos_Aires',
+    slotInterval: 60,
+    minCancelHours: 4,
+    onlineBookingEnabled: true,
+    welcomeMessage: 'Relax y bienestar inmediato',
+    socialLinks: {
+      instagram: '@spaexpress',
+      whatsapp: '+541155554444',
+    },
+    monthlyFee: 12000,
+    debt: 24000,
+    isFrozen: true,
+    createdAt: '2025-01-20T09:30:00Z',
+    lastPaymentDate: '2026-03-20',
+    nextBillingDate: '2026-04-20',
+    whatsappQuota: 100,
+  },
+  {
+    id: 'biz-004',
+    name: 'Gimnasio FitZone',
+    slug: 'fitzone-gym',
+    logoUrl: null,
+    primaryColor: '#f97316',
+    secondaryColor: '#fb923c',
+    accentColor: '#fdba74',
+    phone: '+54 11 6666-7777',
+    email: 'admin@fitzone.com',
+    address: 'Av. Cabildo 3456, CABA',
+    city: 'Buenos Aires',
+    country: 'Argentina',
+    currency: 'ARS',
+    timezone: 'America/Buenos_Aires',
+    slotInterval: 30,
+    minCancelHours: 1,
+    onlineBookingEnabled: false,
+    welcomeMessage: 'Entrenamiento y salud',
+    socialLinks: {
+      instagram: '@fitzone',
+      whatsapp: '+541166667777',
+    },
+    monthlyFee: 22000,
+    debt: 0,
+    isFrozen: false,
+    createdAt: '2025-03-01T08:00:00Z',
+    lastPaymentDate: '2026-05-01',
+    nextBillingDate: '2026-06-01',
+    whatsappQuota: 500,
+  }
+];
+
+export const whatsappConfig = {
+  status: 'connected',
+  phoneId: '105827364810293',
+  token: 'EAAG6d7ZCe210BAM1OqZBoZA0QpSZA...',
+  templateConfirmation: 'Hola {{1}}, tu turno en {{2}} para el día {{3}} a las {{4}} ha sido confirmado. ¡Te esperamos!',
+  templateReminder: 'Hola {{1}}, te recordamos tu turno en {{2}} el día {{3}} a las {{4}}. Si no podés asistir, por favor cancelalo con anticipación.',
+};
+
+const generatedLogs = [];
+for (let i = 0; i < 103; i++) {
+  generatedLogs.push({
+    id: `wlog-gen-${i}`,
+    businessId: 'biz-002',
+    businessName: 'Estética Bella',
+    recipient: '+54 11 9999-9999',
+    recipientName: 'Cliente Simulado',
+    type: 'Recordatorio',
+    status: 'sent',
+    sentAt: '2026-05-23T11:00:00-03:00',
+    message: 'Hola, te recordamos tu turno en Estética Bella.'
+  });
+}
+
+export const whatsappLogs = [
+  {
+    id: 'wlog-001',
+    businessId: 'biz-001',
+    businessName: 'Barbería SACIA',
+    recipient: '+54 11 2222-1111',
+    recipientName: 'Laura Martínez',
+    type: 'Confirmación',
+    status: 'sent',
+    sentAt: '2026-05-23T10:15:00-03:00',
+    message: 'Hola Laura Martínez, tu turno en Barbería SACIA para el día 2026-05-24 a las 10:00 ha sido confirmado.'
+  },
+  {
+    id: 'wlog-002',
+    businessId: 'biz-001',
+    businessName: 'Barbería SACIA',
+    recipient: '+54 11 3333-2222',
+    recipientName: 'Pedro Sánchez',
+    type: 'Recordatorio',
+    status: 'sent',
+    sentAt: '2026-05-23T08:00:00-03:00',
+    message: 'Hola Pedro Sánchez, te recordamos tu turno en Barbería SACIA el día 2026-05-23 a las 11:00.'
+  },
+  {
+    id: 'wlog-003',
+    businessId: 'biz-002',
+    businessName: 'Estética Bella',
+    recipient: '+54 11 4444-3333',
+    recipientName: 'Ana Ruiz',
+    type: 'Confirmación',
+    status: 'failed',
+    error: 'Invalid recipient phone number',
+    sentAt: '2026-05-22T17:45:00-03:00',
+    message: 'Hola Ana Ruiz, tu turno en Estética Bella para el día 2026-05-23 a las 16:00 ha sido confirmado.'
+  },
+  {
+    id: 'wlog-004',
+    businessId: 'biz-002',
+    businessName: 'Estética Bella',
+    recipient: '+54 11 2222-1111',
+    recipientName: 'Laura Martínez',
+    type: 'Confirmación',
+    status: 'sent',
+    sentAt: '2026-05-23T12:00:00-03:00',
+    message: 'Hola Laura Martínez, tu turno en Estética Bella para el día 2026-05-24 a las 14:00 ha sido confirmado.'
+  },
+  {
+    id: 'wlog-005',
+    businessId: 'biz-002',
+    businessName: 'Estética Bella',
+    recipient: '+54 11 3333-2222',
+    recipientName: 'Pedro Sánchez',
+    type: 'Recordatorio',
+    status: 'sent',
+    sentAt: '2026-05-23T14:30:00-03:00',
+    message: 'Hola Pedro Sánchez, te recordamos tu turno en Estética Bella para el día 2026-05-24 a las 15:00.'
+  },
+  ...generatedLogs
+];
+
 
 export const professionals = [
   {
@@ -395,4 +583,13 @@ export const authorizedAdmins = [
     name: 'Juan Pérez',
     addedAt: '2025-01-01T00:00:00',
   },
+  {
+    id: 'auth-005',
+    email: 'cavannaprogramacion@gmail.com',
+    role: 'owner',
+    professionalId: null,
+    name: 'Admin Cavanna',
+    addedAt: '2026-05-23T20:00:00Z',
+  },
 ];
+

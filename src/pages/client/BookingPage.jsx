@@ -321,6 +321,23 @@ export default function BookingPage() {
   const { professionals, services, professionalServices, schedules, appointments, business } = state;
   const { step, professionalId, serviceId, date, timeSlot, personalInfo } = booking;
 
+  if (business?.isFrozen) {
+    return (
+      <div className="booking-container" style={{ textAlign: 'center', padding: 'var(--space-xl) var(--space-md)' }}>
+        <div className="card" style={{ padding: 'var(--space-xl)', maxWidth: 500, margin: '0 auto', borderTop: '4px solid var(--danger)' }}>
+          <div style={{ fontSize: 60, marginBottom: 'var(--space-md)' }}>❄️</div>
+          <h2 style={{ marginBottom: 'var(--space-md)', color: 'var(--danger)' }}>Servicio Suspendido</h2>
+          <p className="text-secondary" style={{ marginBottom: 'var(--space-lg)', lineHeight: 1.5 }}>
+            Las reservas en línea para <strong>{business.name}</strong> se encuentran temporalmente suspendidas.
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+            Por favor, comunicate directamente con el establecimiento al <strong>{business.phone}</strong> para agendar tu turno.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Check if user already has an appointment on this day
   const hasAppointmentToday = useMemo(() => {
     if (!user || !date) return false;
@@ -399,6 +416,20 @@ export default function BookingPage() {
       createdAt: new Date().toISOString(),
     };
     bizDispatch({ type: 'ADD_APPOINTMENT', payload: newAppointment });
+    bizDispatch({
+      type: 'ADD_WHATSAPP_LOG',
+      payload: {
+        id: 'wlog-' + Date.now(),
+        businessId: business.id,
+        businessName: business.name,
+        recipient: personalInfo.phone,
+        recipientName: user.name,
+        type: 'Confirmación',
+        status: 'sent',
+        sentAt: new Date().toISOString(),
+        message: `Hola ${user.name}, tu turno en ${business.name} para el día ${date} a las ${timeSlot.startTime} ha sido confirmado.`
+      }
+    });
     dispatch({ type: 'RESET' });
     navigate('/confirmacion', { state: { appointment: newAppointment } });
   };

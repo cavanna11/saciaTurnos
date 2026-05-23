@@ -3,6 +3,7 @@ import { useAuth } from './contexts/AuthContext';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import AdminLayout from './components/layout/AdminLayout';
+import SuperAdminLayout from './components/layout/SuperAdminLayout';
 
 // Client Pages
 import BookingPage from './pages/client/BookingPage';
@@ -18,27 +19,45 @@ import AppointmentsPage from './pages/admin/AppointmentsPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import AdminsPage from './pages/admin/AdminsPage';
 
+// Super Admin Pages
+import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard';
+
 // Redirige a /login si no está autenticado.
-// adminOnly = true  → además exige rol admin | owner
-function ProtectedRoute({ children, adminOnly = false }) {
+// adminOnly = true  → además exige rol admin | owner (o super-admin email)
+// superAdminOnly = true → exige específicamente el email del dueño de la solución
+function ProtectedRoute({ children, adminOnly = false, superAdminOnly = false }) {
   const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (adminOnly && user?.role !== 'admin' && user?.role !== 'owner') {
+  const platformOwners = ['pocopanjugueteria@gmail.com', 'cavannaprogramacion@gmail.com'];
+  const isPlatformOwner = user?.email && platformOwners.includes(user.email.toLowerCase());
+
+  if (superAdminOnly && !isPlatformOwner) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (adminOnly && user?.role !== 'admin' && user?.role !== 'owner' && !isPlatformOwner) {
     return <Navigate to="/" replace />;
   }
 
   return children;
 }
 
-// Redirige a /admin si el usuario ya está logueado como admin/owner
+// Redirige a /admin (o /super-admin) si el usuario ya está logueado como admin/owner/super-admin
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, user } = useAuth();
-  if (isAuthenticated && (user?.role === 'owner' || user?.role === 'admin')) {
-    return <Navigate to="/admin" replace />;
+  if (isAuthenticated) {
+    const platformOwners = ['pocopanjugueteria@gmail.com', 'cavannaprogramacion@gmail.com'];
+    const isPlatformOwner = user?.email && platformOwners.includes(user.email.toLowerCase());
+    if (isPlatformOwner) {
+      return <Navigate to="/super-admin" replace />;
+    }
+    if (user?.role === 'owner' || user?.role === 'admin') {
+      return <Navigate to="/admin" replace />;
+    }
   }
   return children;
 }
@@ -97,6 +116,15 @@ export default function App() {
           <Route path="citas" element={<AppointmentsPage />} />
           <Route path="admins" element={<AdminsPage />} />
           <Route path="configuracion" element={<SettingsPage />} />
+        </Route>
+
+        {/* ── Rutas de super-admin ────────────────────────────────── */}
+        <Route path="/super-admin" element={
+          <ProtectedRoute superAdminOnly>
+            <SuperAdminLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<SuperAdminDashboard />} />
         </Route>
 
         {/* Fallback */}
